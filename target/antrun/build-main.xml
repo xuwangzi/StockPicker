@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="maven-antrun-" default="main">
+  <target name="main">
+    <delete dir="target/../release" />
+    <copy todir="target/../release">
+      <fileset dir="target/qiwen-stock-1.2.1/qiwen-stock-1.2.1"></fileset>
+    </copy>
+  </target>
+</project>
