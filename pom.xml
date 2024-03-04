@@ -8,7 +8,7 @@
         <version>1.2.1</version>
     </parent>
     <groupId>com.qiwenshare</groupId>
-    <artifactId>qiwen-stock</artifactId>
+    <artifactId>stock-backend</artifactId>
     <version>${project.parent.version}</version>
     <name>stock-web</name>
     <description>Demo project for Spring Boot</description>

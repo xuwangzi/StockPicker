@@ -24,6 +24,9 @@ public interface StockMapper  extends BaseMapper<StockBean> {
 
     int getStockCount(@Param("key") String key, @Param("beginCount") Long beginCount, @Param("pageCount") Long pageCount);
 
+    // stockpicker
+    List<StockPickerBean> getStockPicker();
+
     List<StockDayInfo> selectStockDayInfoList(StockBean stockBean);
 
     List<StockTimeInfo> selectStocktimeListByStockNum(StockTimeInfo stockTimeInfo);

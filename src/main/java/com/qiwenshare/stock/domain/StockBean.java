@@ -7,26 +7,22 @@ import lombok.Data;
 
 import javax.persistence.*;
 
-@Data // Lombok库提供的一个注解。使用此注解后，编译器会自动生成该类的getter、setter、equals、hashCode和toString方法，从而简化代码。
-@Entity // 这是JPA（Java Persistence API）的一个注解。标记一个类为实体类，表示这个类是一个数据库中的表。
-        // 当使用JPA或Hibernate这样的框架时，你不需要编写任何SQL来映射实体类到数据库表，框架会自动为你处理。
-// JPA的一个注解。指定实体类对应的数据库表名。在这个例子中，数据库中的表名是"stock"。
+@Data
+@Entity
 @Table(name = "stock")
 @TableName("stock")
 public class StockBean {
-    @Id // 表明stockId字段是数据库表的主键。
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // 表示主键值是由数据库自动生成的。
-    // GenerationType.IDENTITY表示使用数据库的自增策略来生成主键值。
-    @TableId(type = IdType.AUTO)    // MyBatisPlus的@TableId注解，实现自增序列id自动插入
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(type = IdType.AUTO)
     private Long stockId;
     @Column
     private String stockNum;
     @Column
     private String stockName;
-    /**
-     * 表名，查询用，非实体属性
-     * 在Java的JPA（Java Persistence API）上下文中，使用@Transient注解表明该属性不会持久化到数据库中（只想在内存中保留该信息）
-     */
+//    /**
+//     * 表名，查询用，非实体属性
+//     */
     @Transient
     private String stockTableName;
 //    //公司代码，解析json用
@@ -63,7 +59,7 @@ public class StockBean {
     private double turnOverrate;
 
     /**
-     * 涨跌额
+     * 涨跌额 今天的收盘价，相对昨天收盘价，增加的股价，即 涨跌额=今天收盘价-昨天收盘价
      */
     @Column(precision = 10, scale = 3)
     private double upDownPrices;
@@ -113,7 +109,7 @@ public class StockBean {
             return true;
         }
         if (obj instanceof StockBean) {
-            // 比较对象也是StockBean对象时，判断 股票名称 和 股票代码 是否都相同
+            // 比较对象也是StockBean对象时，判断name和age是否都相同
             StockBean p = (StockBean) obj;
             return stockNum.equals(p.stockNum) && stockName.equals(p.stockName);
         }

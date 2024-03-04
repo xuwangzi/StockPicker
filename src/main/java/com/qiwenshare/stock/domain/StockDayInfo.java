@@ -42,9 +42,13 @@ public class StockDayInfo {
      */
     private double preClose;
     /**
-     * 涨幅
+     * 涨跌额
      */
-    private double netChangeRatio;
+    private double change;
+    /**
+     * 涨跌幅
+     */
+    private double pctChange;
     //指标
     private double k;
     private double d;

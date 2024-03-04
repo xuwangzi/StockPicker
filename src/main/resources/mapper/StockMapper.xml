@@ -6,13 +6,11 @@
 
 <mapper namespace="com.qiwenshare.stock.mapper.StockMapper">
     <insert id="insertStockDayInfo" parameterType="java.util.Map">
-        INSERT ignore ${stockDayInfoTable} (date, open, high, low, close, volume, amount,
-        ma5, ma10, ma20, ma30, ma60, ma120, ma200, ma250, volume120, k, d, j, dif, dea, macd, wr6, wr10
-        ,rsi6, rsi12, rsi24, preClose)
+        INSERT ignore `${stockDayInfoTable}` (date, open, high, low, close, volume, amount, `change`, pctChange, ma5, ma10, ma20, ma30, ma60, ma120, ma200, ma250, volume120, k, d, j, dif, dea, macd, wr6, wr10 ,rsi6, rsi12, rsi24, preClose)
         VALUES
         <foreach collection="stockdayinfo" item="stockDayInfo" index="index" separator=",">
             (#{stockDayInfo.date}, #{stockDayInfo.open}, #{stockDayInfo.high},
-            #{stockDayInfo.low}, #{stockDayInfo.close}, #{stockDayInfo.volume}, #{stockDayInfo.amount},
+            #{stockDayInfo.low}, #{stockDayInfo.close}, #{stockDayInfo.volume}, #{stockDayInfo.amount}, #{stockDayInfo.change}, #{stockDayInfo.pctChange},
             #{stockDayInfo.ma5}, #{stockDayInfo.ma10}
             , #{stockDayInfo.ma20}, #{stockDayInfo.ma30}, #{stockDayInfo.ma60}, #{stockDayInfo.ma120}
             , #{stockDayInfo.ma200}, #{stockDayInfo.ma250}, #{stockDayInfo.volume120}, #{stockDayInfo.k},
@@ -23,7 +21,7 @@
     </insert>
 
     <insert id="insertStockWeekInfo" parameterType="java.util.Map">
-        INSERT ignore ${stockWeekInfoTable} (date, open, high, low, close, volume, amount,
+        INSERT ignore `${stockWeekInfoTable}` (date, open, high, low, close, volume, amount,
         ma5, ma10, ma20, ma30, ma60, ma120, ma200, ma250, k, d, j, dif, dea, macd, wr6, wr10
         ,rsi6, rsi12, rsi24)
         VALUES
@@ -40,7 +38,7 @@
     </insert>
 
     <insert id="insertStockMonthInfo" parameterType="java.util.Map">
-        INSERT ignore ${stockMonthInfoTable} (date, open, high, low, close, volume, amount,
+        INSERT ignore `${stockMonthInfoTable}` (date, open, high, low, close, volume, amount,
         ma5, ma10, ma20, ma30, ma60, ma120, ma200, ma250, k, d, j, dif, dea, macd, wr6, wr10
         ,rsi6, rsi12, rsi24)
         VALUES
@@ -58,7 +56,7 @@
     </insert>
 
     <insert id="insertStockTimeInfo" parameterType="java.util.Map">
-        INSERT ignore ${stockTimeInfoTable} (date,time, stockCode, amount, volume,
+        INSERT ignore `${stockTimeInfoTable}` (date,time, stockCode, amount, volume,
         price, avgPrice, upDownRange)
         VALUES
         <foreach collection="stocktimeinfo" item="stockTimeInfo" index="index" separator=",">
@@ -87,7 +85,7 @@
     </insert>
 
     <update id="createStockDayInfoTable">
-        CREATE TABLE IF NOT EXISTS ${_parameter} (
+        CREATE TABLE IF NOT EXISTS `${_parameter}` (
         `dayInfoId` bigint(20) NOT NULL AUTO_INCREMENT,
         `date` date DEFAULT NULL,
         `stockId` bigint(20) DEFAULT NULL,
@@ -99,6 +97,8 @@
         `preClose` double(10,3) DEFAULT NULL,
         `volume` double(15,0) DEFAULT NULL,
         `amount` double(15,0) DEFAULT NULL,
+        `change` double(10,3) DEFAULT NULL,
+        `pctChange` double(10,3) DEFAULT NULL,
         `ma5` double(15,5) DEFAULT NULL,
         `ma10` double(15,5) DEFAULT NULL,
         `ma20` double(15,5) DEFAULT NULL,
@@ -125,7 +125,7 @@
     </update>
 
     <update id="createStockWeekInfoTable">
-        CREATE TABLE IF NOT EXISTS ${_parameter} (
+        CREATE TABLE IF NOT EXISTS `${_parameter}` (
         `weekInfoId` bigint(20) NOT NULL AUTO_INCREMENT,
         `date` date DEFAULT NULL,
         `stockId` bigint(20) DEFAULT NULL,
@@ -161,7 +161,7 @@
     </update>
 
     <update id="createStockMonthInfoTable">
-        CREATE TABLE IF NOT EXISTS ${_parameter} (
+        CREATE TABLE IF NOT EXISTS `${_parameter}` (
         `monthInfoId` bigint(20) NOT NULL AUTO_INCREMENT,
         `date` date DEFAULT NULL,
         `stockId` bigint(20) DEFAULT NULL,
@@ -198,7 +198,7 @@
 
 
     <update id="createStockTimeInfoTable">
-        CREATE TABLE IF NOT EXISTS ${_parameter} (
+        CREATE TABLE IF NOT EXISTS `${_parameter}` (
         `timeInfoId` bigint(20) NOT NULL AUTO_INCREMENT,
         `date` date DEFAULT NULL,
         `stockId` bigint(20) DEFAULT NULL,
@@ -246,6 +246,11 @@
         </if>
     </select>
 
+    <!--  StockPicker  -->
+    <select id="getStockPicker" resultType="com.qiwenshare.stock.domain.StockPickerBean">
+        select * from stockpicker
+    </select>
+
     <select id="getStockInfoById" resultType="com.qiwenshare.stock.domain.StockBean">
         select * from stock where stockNum = #{stockId}
     </select>
@@ -257,24 +262,26 @@
         </if>
         order by stockId asc
     </select>
+
     <select id="selectStockDayInfoList" parameterType="String" resultType="com.qiwenshare.stock.domain.StockDayInfo">
-        SELECT * FROM ${stockTableName} order by date asc
+        SELECT * FROM `${stockTableName}` order by date asc
     </select>
 
     <select id="selectStockweekListByStockNum" parameterType="String" resultType="com.qiwenshare.stock.domain.StockWeekInfo">
-        SELECT * FROM ${stockTableName} order by date asc
+        SELECT * FROM `${stockTableName}` order by date asc
     </select>
 
     <select id="selectStockmonthListByStockNum" parameterType="String" resultType="com.qiwenshare.stock.domain.StockMonthInfo">
-        SELECT * FROM ${stockTableName} order by date asc
+        SELECT * FROM `${stockTableName}` order by date asc
     </select>
 
     <select id="selectStocktimeListByStockNum" parameterType="com.qiwenshare.stock.domain.StockTimeInfo"
             resultType="com.qiwenshare.stock.domain.StockTimeInfo">
-        select * from ${stockTableName} where date = (select max(date) from ${stockTableName})
+        select * from `${stockTableName}` where date = (select max(date) from `${stockTableName}`)
         order by time asc
     </select>
 
+<!--    后面两个方法没有地方用到-->
     <select id="getStockDayInfoBySelect" resultType="com.qiwenshare.stock.domain.StockDayInfo">
         SELECT * FROM stockdayinfo
         <if test="key != null">

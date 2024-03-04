@@ -10,6 +10,7 @@ import com.qiwenshare.stock.api.IStockDIService;
 import com.qiwenshare.stock.common.HttpsUtils;
 import com.qiwenshare.stock.domain.StockBean;
 import com.qiwenshare.stock.domain.StockDayInfo;
+import com.qiwenshare.stock.domain.StockPickerBean;
 import com.qiwenshare.stock.mapper.StockMapper;
 import org.apache.ibatis.annotations.Param;
 import org.slf4j.Logger;
@@ -17,6 +18,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +59,11 @@ public class StockService extends ServiceImpl<StockMapper, StockBean> implements
     @Override
     public int getStockCount(String key, Long beginCount, Long pageCount) {
         return stockMapper.getStockCount(key, beginCount, pageCount);
+    }
+
+    @Override
+    public List<StockPickerBean> getStockPicker(){
+        return stockMapper.getStockPicker();
     }
 
     @Override
@@ -102,64 +110,155 @@ public class StockService extends ServiceImpl<StockMapper, StockBean> implements
         return result.getJSONObject(0);
     }
 
-// todo 网络接口获取股票列表
+
     @Override
     public List<StockBean> getStockListByScript() {
-        String url = "http://19.push2.eastmoney.com/api/qt/clist/get";
 
-        List<StockBean> stockBeanList = new ArrayList<StockBean>();
+//        String tushareUrl = "http://api.tushare.pro";
+//
+//        JSONObject param1 = new JSONObject();
+//        param1.put("api_name", "realtime_list");
+//        param1.put("token", "f558cbc6b24ed78c2104e209a8a8986b33ec66b7c55bcfa2f46bc108");
+////        JSONObject paramTushare = new JSONObject();
+////        paramTushare.put()
+//        param1.put("params", "");
+//        param1.put("fields", "");
+//        String sendResult1 = HttpsUtils.doJSONPost(tushareUrl, param1);
+//
 
-        Map<String, Object> param = new HashMap<String, Object>();
-        param.put("pn", "1");
-        param.put("pz", "3000");
-        param.put("po", "1");
-        param.put("np", "1");
-        param.put("ut", "bd1d9ddb04089700cf9c27f6f7426281");
-        param.put("fltt", "2");
-        param.put("invt", "2");
-        param.put("fid", "f3");
-        param.put("fs", "m:1+t:2,m:1+t:23");
-        param.put("fields", "f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f13,f14,f15,f16,f17,f18,f20,f21,f23,f24,f25,f26,f38,f39,f22,f11,f62,f128,f136,f115,f152,f297");
-        param.put("invt", "2");
-        param.put("invt", "2");
-        param.put("invt", "2");
-        String sendResult = HttpsUtils.doGetString(url, param);
-
-        JSONObject data = new JSONObject();
+        String sendResult = HttpsUtils.doGetString("http://localhost:5000/stock/getRealTimeList");
+        JSONArray data1 = new JSONArray();
         try {
-            data = JSONObject.parseObject(sendResult).getJSONObject("data");
+            data1 = JSONArray.parseArray(sendResult);
         } catch (JSONException e) {
-            logger.error("解析jsonb报错：" + data.toJSONString());
+            logger.error("解析jsonb报错：" + data1.toJSONString());
         } catch (NullPointerException e) {
             logger.error(e.getMessage());
             e.printStackTrace();
         }
 
-        JSONArray diff = data.getJSONArray("diff");
-        for (Object o : diff) {
+        List<StockBean> stockBeanList = new ArrayList<StockBean>();
+
+        int countSZ =0;
+        int countSH =0;
+        int countBJ =0;
+        for (Object o : data1) {
+            // 开发阶段各取了3只股票
+            if(countSZ>3 && countSH>3 && countBJ>3) break;
             Map<String, Object> map = (Map) o;
+            if(countSZ>10 && map.get("TS_CODE").toString().split("\\.")[1].equals("SZ")) continue;
+            if(countSH>10 && map.get("TS_CODE").toString().split("\\.")[1].equals("SH")) continue;
+            if(countBJ>10 && map.get("TS_CODE").toString().split("\\.")[1].equals("BJ")) continue;
             StockBean stockBean = new StockBean();
-            stockBean.setStockNum((String) map.get("f12"));
-            stockBean.setStockName((String) map.get("f14"));
-            stockBean.setTotalFlowShares(objectToBigDecimal(map.get("f39")));
-            stockBean.setTotalShares(objectToBigDecimal(map.get("f38")));
-            stockBean.setUpDownRange(objectToBigDecimal(map.get("f3")));
-            stockBean.setTurnOverrate(objectToBigDecimal(map.get("f8")));
-            stockBean.setUpDownPrices(objectToBigDecimal(map.get("f4")));
-            stockBean.setOpen(objectToBigDecimal(map.get("f17")));
-            stockBean.setClose(objectToBigDecimal(map.get("f2")));
-            stockBean.setHigh(objectToBigDecimal(map.get("f15")));
-            stockBean.setLow(objectToBigDecimal(map.get("f16")));
-            stockBean.setPreClose(objectToBigDecimal(map.get("f18")));
-            stockBean.setVolume(objectToBigDecimal(map.get("f5")));
-            stockBean.setAmount(objectToBigDecimal(map.get("f6")));
-            stockBean.setAmplitude(objectToBigDecimal(map.get("f7")));
-            stockBean.setTotalMarketValue(objectToBigDecimal( map.get("f20")));
-            stockBean.setFlowMarketValue(objectToBigDecimal(map.get("f21")));
-            stockBean.setListingDate(String.valueOf(map.get("f26")));
+            stockBean.setStockNum((String) map.get("TS_CODE"));
+            stockBean.setStockName((String) map.get("NAME"));
+//            stockBean.setTotalFlowShares(objectToBigDecimal(map.get("f39")));
+//            stockBean.setTotalShares(objectToBigDecimal(map.get("f38")));
+            stockBean.setUpDownRange(objectToBigDecimal(map.get("PCT_CHANGE")));
+            stockBean.setTurnOverrate(objectToBigDecimal(map.get("TURNOVER_RATE")));
+            stockBean.setUpDownPrices(objectToBigDecimal(map.get("CHANGE")));
+            stockBean.setOpen(objectToBigDecimal(map.get("OPEN")));
+            stockBean.setClose(objectToBigDecimal(map.get("CLOSE")));
+            stockBean.setHigh(objectToBigDecimal(map.get("HIGH")));
+            stockBean.setLow(objectToBigDecimal(map.get("LOW")));
+            DecimalFormat df = new DecimalFormat("0.00");
+            df.setRoundingMode(RoundingMode.HALF_UP);
+            stockBean.setPreClose(objectToBigDecimal(df.format(stockBean.getClose()-stockBean.getUpDownPrices())));
+            stockBean.setVolume(objectToBigDecimal(map.get("VOLUME")));
+            stockBean.setAmount(objectToBigDecimal(map.get("AMOUNT")));
+            stockBean.setAmplitude(objectToBigDecimal(map.get("SWING")));
+            stockBean.setTotalMarketValue(objectToBigDecimal( map.get("TOTAL_MV")));
+            stockBean.setFlowMarketValue(objectToBigDecimal(map.get("FLOAT_MV")));
+//            stockBean.setListingDate(String.valueOf(map.get("f26")));
+            // 获取每日指标
+            String tushareUrl = "http://api.tushare.pro";
+            JSONObject param = new JSONObject();
+            param.put("api_name", "daily_basic");
+            param.put("token", "f558cbc6b24ed78c2104e209a8a8986b33ec66b7c55bcfa2f46bc108");
+            Map<String, Object> paramTushare = new HashMap<String, Object>();
+            paramTushare.put("ts_code", map.get("TS_CODE"));
+            param.put("params", paramTushare);
+            param.put("fields", "");
+            String sendResult1 = HttpsUtils.doJSONPost(tushareUrl, param);
+            // 解析
+            JSONObject data = new JSONObject();
+            try {
+                data = JSONObject.parseObject(sendResult1).getJSONObject("data");
+            } catch (JSONException e) {
+                log.error("解析jsonb报错：" + data.toJSONString());
+            } catch (NullPointerException e) {
+                log.error(e.getMessage());
+                e.printStackTrace();
+            }
+
+            JSONArray items = (JSONArray) data.getJSONArray("items").get(0);
+
+            stockBean.setTotalFlowShares(objectToBigDecimal(items.get(14)));
+            stockBean.setTotalShares(objectToBigDecimal(items.get(13)));
+
 
             stockBeanList.add(stockBean);
+            String[] stockNum = stockBean.getStockNum().split("\\.");
+            if(stockNum[1].equals("SZ")) countSZ+=1;
+            if(stockNum[1].equals("SH")) countSH+=1;
+            if(stockNum[1].equals("BJ")) countBJ+=1;
         }
+
+//        String url = "http://19.push2.eastmoney.com/api/qt/clist/get";
+//
+//        List<StockBean> stockBeanList = new ArrayList<StockBean>();
+//
+//        Map<String, Object> param = new HashMap<String, Object>();
+//        param.put("pn", "1");
+//        param.put("pz", "3000");
+//        param.put("po", "1");
+//        param.put("np", "1");
+//        param.put("ut", "bd1d9ddb04089700cf9c27f6f7426281");
+//        param.put("fltt", "2");
+//        param.put("invt", "2");
+//        param.put("fid", "f3");
+//        param.put("fs", "m:1+t:2,m:1+t:23");
+//        param.put("fields", "f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f12,f13,f14,f15,f16,f17,f18,f20,f21,f23,f24,f25,f26,f38,f39,f22,f11,f62,f128,f136,f115,f152,f297");
+//        param.put("invt", "2");
+//        param.put("invt", "2");
+//        param.put("invt", "2");
+//        String sendResult = HttpsUtils.doGetString(url, param);
+//
+//        JSONObject data = new JSONObject();
+//        try {
+//            data = JSONObject.parseObject(sendResult).getJSONObject("data");
+//        } catch (JSONException e) {
+//            logger.error("解析jsonb报错：" + data.toJSONString());
+//        } catch (NullPointerException e) {
+//            logger.error(e.getMessage());
+//            e.printStackTrace();
+//        }
+//
+//        JSONArray diff = data.getJSONArray("diff");
+//        for (Object o : diff) {
+//            Map<String, Object> map = (Map) o;
+//            StockBean stockBean = new StockBean();
+//            stockBean.setStockNum((String) map.get("f12"));
+//            stockBean.setStockName((String) map.get("f14"));
+//            stockBean.setTotalFlowShares(objectToBigDecimal(map.get("f39")));
+//            stockBean.setTotalShares(objectToBigDecimal(map.get("f38")));
+//            stockBean.setUpDownRange(objectToBigDecimal(map.get("f3")));
+//            stockBean.setTurnOverrate(objectToBigDecimal(map.get("f8")));
+//            stockBean.setUpDownPrices(objectToBigDecimal(map.get("f4")));
+//            stockBean.setOpen(objectToBigDecimal(map.get("f17")));
+//            stockBean.setClose(objectToBigDecimal(map.get("f2")));
+//            stockBean.setHigh(objectToBigDecimal(map.get("f15")));
+//            stockBean.setLow(objectToBigDecimal(map.get("f16")));
+//            stockBean.setPreClose(objectToBigDecimal(map.get("f18")));
+//            stockBean.setVolume(objectToBigDecimal(map.get("f5")));
+//            stockBean.setAmount(objectToBigDecimal(map.get("f6")));
+//            stockBean.setAmplitude(objectToBigDecimal(map.get("f7")));
+//            stockBean.setTotalMarketValue(objectToBigDecimal( map.get("f20")));
+//            stockBean.setFlowMarketValue(objectToBigDecimal(map.get("f21")));
+//            stockBean.setListingDate(String.valueOf(map.get("f26")));
+//
+//            stockBeanList.add(stockBean);
+//        }
 
         return stockBeanList;
     }

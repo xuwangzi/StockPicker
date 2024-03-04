@@ -245,6 +245,8 @@ public class MACD implements Indicator {
 
     @Override
     public List<StockDayInfo> getDayIndicatorList(List<StockDayInfo> stockdayinfoList) {
+        // 只有一个数据项的处理, 按照这个函数逻辑，结果会比原list少一项
+        if(stockdayinfoList.size()<=1) return stockdayinfoList;
         List<StockDayInfo> newstockDayinfoList = new ArrayList<StockDayInfo>();
         StockDayInfo preStockdayinfo = null;
         double preEMA12 = 0;

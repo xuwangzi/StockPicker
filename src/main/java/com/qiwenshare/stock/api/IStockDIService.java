@@ -2,6 +2,7 @@ package com.qiwenshare.stock.api;
 
 import com.qiwenshare.stock.domain.StockBean;
 import com.qiwenshare.stock.domain.StockDayInfo;
+import com.qiwenshare.stock.domain.StockPickerBean;
 
 import java.util.List;
 
@@ -17,6 +18,8 @@ public interface IStockDIService {
 
     List<StockBean> selectStockList(String key, Long beginCount, Long pageCount);
 
+    List<StockPickerBean> getStockPicker();
+
     StockBean getStockInfoById(String stockId);
 
     int getStockCount(String key, Long beginCount, Long pageCount);
@@ -26,8 +29,6 @@ public interface IStockDIService {
     List<StockBean> getNoExistStockList(List<StockBean> stockBeanList);
 
     List<StockBean> getStockListByScript();
-
-
 
     StockBean getStockInfo(StockBean stockBean, List<StockDayInfo> stockdayinfoList);
 

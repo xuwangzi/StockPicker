@@ -40,10 +40,8 @@ public class StockController {
      * 当前模块
      */
 
-    private static final int NTHREADS = 5;  // 线程池中线程的数量
+    private static final int NTHREADS = 5;
     public static ExecutorService stockReplayexec = Executors.newFixedThreadPool(NTHREADS);
-    // ExecutorService是Java并发API的一部分，它表示一个可调度的、可管理的线程池。
-    // Executors是Java并发API中的一个工具类，它提供了静态方法来创建不同类型的线程池。
     public static ExecutorService stockListexec = Executors.newFixedThreadPool(NTHREADS);
     @Resource
     IStockDIService stockDIService;
@@ -220,19 +218,12 @@ public class StockController {
 
     }
 
-    @Operation(summary = "更新股票列表") // Swagger注解，常用于API文档生成；summary属性提供了这个操作的简短描述，即“更新股票列表”
-    @RequestMapping("/updatestocklist") // 定义了HTTP请求的路径
-    // 表示该方法的返回值应该直接写入HTTP响应体中，而不是作为一个视图名称处理。
-    // 通常与@RequestMapping一起使用，以确保返回的数据直接成为响应体。
+    @Operation(summary = "更新股票列表")
+    @RequestMapping("/updatestocklist")
     @ResponseBody
-    public RestResult<String> updateStockList(HttpServletRequest request) {// todo
+    public RestResult<String> updateStockList(HttpServletRequest request) {
 
-        // RestResult 是一个用于表示 RESTful API 请求结果的对象。
         RestResult<String> restResult = new RestResult<String>();
-        // bean 指的是 JavaBean。JavaBean 是一个可重复使用的软件组件，它是 Java 语言中的一个类，遵循特定的命名和编程约定。
-        // JavaBeans 是用于封装多个对象或数据的对象，通常用于分布式系统中的数据传输对象（DTO）。
-        // DTO（Data Transfer Object）是一个设计模式，在Web开发中，DTO通常用于将后端服务的数据传输到前端。
-        // 例如，在一个基于RESTful API的Web应用程序中，后端可能会使用DTO来封装要返回给前端的数据，并确保数据格式的一致性和正确性。
         List<StockBean> stockBeanList = stockDIService.getStockListByScript();
         //新增股票列表
         List<StockBean> newStockList = stockDIService.getNoExistStockList(stockBeanList);
@@ -241,14 +232,12 @@ public class StockController {
         if (newStockList.size() > 0) {
             stockDIService.insertStockList(newStockList);
             for (StockBean stockBean : newStockList) {
-                stockListexec.execute(new Runnable() {  // 启动一个新的线程来执行一个任务
+                stockListexec.execute(new Runnable() {
                     @Override
                     public void run() {
                         TaskProcess taskProcess = new TaskProcess();
                         taskProcess.setTaskId(0);
                         synchronized (StockController.class) {
-                            // 同步块，它使用StockController.class作为锁对象，以确保在同一时间只有一个线程可以执行这个代码块。
-                            // 这可以避免多线程访问和修改共享资源时发生冲突或数据不一致的问题。
                             updateCount++;
                         }
                         taskProcess.setCompleteCount(updateCount);
@@ -256,10 +245,8 @@ public class StockController {
 
                         String stockNum = stockBean.getStockNum();
                         EchnicalaspectBean echnicalaspect = new EchnicalaspectBean(stockNum);
-                        // echnicalaspect存储着股票更新时间
                         AbnormalactionBean abnormalactionBean = new AbnormalactionBean(stockNum);
-                        // todo AbnormalactionBean代表什么？
-                        StockBidBean stockBidBean = new StockBidBean(stockNum); // stockBidBean 是 买入卖出委托
+                        StockBidBean stockBidBean = new StockBidBean(stockNum);
                         echnicalaspectService.insertEchnicalaspect(echnicalaspect);
                         abnormalaActionService.insertAbnormalaAction(abnormalactionBean);
                         stockBidService.insertStockBid(stockBidBean);
@@ -310,7 +297,19 @@ public class StockController {
         return RestResult.success().data(map);
     }
 
-    @Operation(summary = "获取技术面结果")
+    @Operation(summary = "查询股票推荐列表信息")
+    @RequestMapping("/getstockpicker")
+    @ResponseBody
+    public RestResult getStockPicker() {
+
+        List<StockPickerBean> stockPickerList = stockDIService.getStockPicker();
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("list", stockPickerList);
+        return RestResult.success().data(map);
+    }
+
+    @Operation(summary = "获取技术面分析结果")
     @RequestMapping("/getechnicalaspect")
     @ResponseBody
     public EchnicalaspectBean getEchnicalaspect(String stockNum) {
@@ -407,12 +406,10 @@ public class StockController {
         String result = "";
         String url = "http://yunhq.sse.com.cn:32041//v1/sh1/list/self/000001_000016_000010_000009_000300&select=code%2Cname%2Clast%2Cchg_rate%2Camount%2Copen%2Cprev_close&_=1585456053043";
         try {
-            result = IOUtils.toString(HttpsUtils.doGet(url), "UTF-8");
+            result = IOUtils.toString(HttpsUtils.doGet(url), "utf-8");
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-//        System.out.println(result);
         return result;
     }
 

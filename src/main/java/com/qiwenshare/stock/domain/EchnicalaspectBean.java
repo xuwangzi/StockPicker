@@ -52,7 +52,7 @@ public class EchnicalaspectBean {
 
     //macd
     @Column
-    private int bullMarket;
+    private int bullMarket; // 市场趋势
     @Column
     private int bearMarket;
     @Column
@@ -63,7 +63,7 @@ public class EchnicalaspectBean {
 
     //rsi
     @Column
-    private int prosperityLevel;
+    private int prosperityLevel; // 市场景气程度
     @Column
     private int cattleStart;
 

@@ -39,6 +39,7 @@ import java.util.Map;
 
 public class HttpsUtils {
     private static final int MAX_TIMEOUT = 7000;
+    private static final int MAX_SOCKET_TIMEOUT = 70000;
     private static final Logger logger = LoggerFactory.getLogger(HttpsUtils.class);
     private static PoolingHttpClientConnectionManager connMgr;
     private static RequestConfig requestConfig;
@@ -55,7 +56,7 @@ public class HttpsUtils {
         // 设置连接超时
         configBuilder.setConnectTimeout(MAX_TIMEOUT);
         // 设置读取超时
-        configBuilder.setSocketTimeout(MAX_TIMEOUT);
+        configBuilder.setSocketTimeout(MAX_SOCKET_TIMEOUT);
         // 设置从连接池获取连接实例的超时
         configBuilder.setConnectionRequestTimeout(MAX_TIMEOUT);
 
@@ -204,7 +205,7 @@ public class HttpsUtils {
      * @param json   json对象
      * @return 返回
      */
-    public static String doPost(String apiUrl, Object json) {
+    public static String doJSONPost(String apiUrl, Object json) {
         CloseableHttpClient httpClient = null;
         if (apiUrl.startsWith("https")) {
             httpClient = HttpClients.custom().setSSLSocketFactory(createSSLConnSocketFactory())

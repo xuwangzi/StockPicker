@@ -17,10 +17,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -92,20 +89,31 @@ public class StockDayInfoService implements IStockDayInfoService {
         return stockMapper.selectStockDayInfoList(stockBean);
     }
 
-    // 网络接口获取股票日k线
     @Override
     public List<StockDayInfo> crawlStockDayInfoListByStockBean(String stockNum) {
-        String url = "http://push2his.eastmoney.com/api/qt/stock/kline/get";
-        Map<String, Object> param = new HashMap<String, Object>();
-        param.put("fields1", "f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6");
-        param.put("fields2", "f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61");
-        param.put("ut", "7eea3edcaed734bea9cbfc24409ed989");
-        param.put("klt", "101");
-        param.put("fqt", "1");
-        param.put("secid", "1." + stockNum);
-        param.put("beg", "0");
-        param.put("end", "20500000");
-        String sendResult = HttpsUtils.doGetString(url, param);
+
+
+        String tushareUrl = "http://api.tushare.pro";
+        JSONObject param = new JSONObject();
+        param.put("api_name", "daily");
+        param.put("token", "f558cbc6b24ed78c2104e209a8a8986b33ec66b7c55bcfa2f46bc108");
+        Map<String, Object> paramTushare = new HashMap<String, Object>();
+        paramTushare.put("ts_code", stockNum);
+        param.put("params", paramTushare);
+        param.put("fields", "");
+        String sendResult = HttpsUtils.doJSONPost(tushareUrl, param);
+
+//        String url = "http://push2his.eastmoney.com/api/qt/stock/kline/get";
+//        Map<String, Object> param = new HashMap<String, Object>();
+//        param.put("fields1", "f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6");
+//        param.put("fields2", "f51%2Cf52%2Cf53%2Cf54%2Cf55%2Cf56%2Cf57%2Cf58%2Cf59%2Cf60%2Cf61");
+//        param.put("ut", "7eea3edcaed734bea9cbfc24409ed989"); // token
+//        param.put("klt", "101");
+//        param.put("fqt", "1");
+//        param.put("secid", "1." + stockNum);
+//        param.put("beg", "0");
+//        param.put("end", "20500000");
+//        String sendResult = HttpsUtils.doGetString(url, param);
 
         JSONObject data = new JSONObject();
         try {
@@ -120,30 +128,36 @@ public class StockDayInfoService implements IStockDayInfoService {
         List<StockDayInfo> stockDayInfoList = new ArrayList<StockDayInfo>();
 //        BigDecimal preKPrice = objectToBigDecimal(data.get("preKPrice"));
 
-        JSONArray klines = data.getJSONArray("klines");
+        JSONArray klines = data.getJSONArray("items");
         for (int i = 0; i < klines.size(); i++) {
-            String kline = (String) klines.get(i);
-            String[] item = kline.split(",");
+//            String kline = klines.get(i).toString();
+//            String[] item = kline.split(",");
+            JSONArray item = (JSONArray) klines.get(i);
             StockDayInfo stockDayInfo = new StockDayInfo();
-            stockDayInfo.setDate(item[0]);
-            stockDayInfo.setOpen(objectToBigDecimal(item[1]));
-            stockDayInfo.setClose(objectToBigDecimal(item[2]));
-            stockDayInfo.setHigh(objectToBigDecimal(item[3]));
-            stockDayInfo.setLow(objectToBigDecimal(item[4]));
-            stockDayInfo.setVolume(objectToBigDecimal(item[5]));
-            stockDayInfo.setAmount(objectToBigDecimal(item[6]));
-            if (objectToBigDecimal(item[9]) == null) {
-                stockDayInfo.setPreClose(0);
-            } else {
-                if (objectToBigDecimal(item[2]) == null) {
-                    log.info("---------------null-------------" + stockNum);
-                }
-                stockDayInfo.setPreClose(objectToBigDecimal(item[2]) == null ? 0 : objectToBigDecimal(item[2])-(objectToBigDecimal(item[9])));
-            }
+            String date = item.getString(1);
+            stockDayInfo.setDate(date.substring(0,4)+'-'+date.substring(4,6)+'-'+date.substring(6,8));
+            stockDayInfo.setOpen(item.getDouble(2));
+            stockDayInfo.setHigh(item.getDouble(3));
+            stockDayInfo.setLow(item.getDouble(4));
+            stockDayInfo.setClose(item.getDouble(5));
+            stockDayInfo.setChange(item.getDouble(7));
+            stockDayInfo.setPctChange(item.getDouble(8));
+            stockDayInfo.setVolume(item.getDouble(9));
+            stockDayInfo.setAmount(item.getDouble(10));
+//            if (objectToBigDecimal(item[7]) == null) {
+//                stockDayInfo.setPreClose(0);
+//            } else {
+//                if (objectToBigDecimal(item[2]) == null) {
+//                    log.info("---------------null-------------" + stockNum);
+//                }
+//                stockDayInfo.setPreClose(objectToBigDecimal(item[2]) == null ? 0 : objectToBigDecimal(item[2])-(objectToBigDecimal(item[9])));
+//            }
+            stockDayInfo.setPreClose(item.getDouble(6));
 
             stockDayInfoList.add(stockDayInfo);
         }
 
+        Collections.reverse(stockDayInfoList);
         return stockDayInfoList;
     }
 

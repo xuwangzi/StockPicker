@@ -52,7 +52,8 @@ public class EchnicalaspectService implements IEchnicalaspectService {
         MACD macd = new MACD();
         RSI rsi = new RSI();
         TacticsAnalysis tacticsAnalysis = new CattleCatchingAnalysis();
-        StockDayInfo preStockDayInfo = stockDayInfoList.get(stockDayInfoList.size() - 2);
+
+        StockDayInfo preStockDayInfo = stockDayInfoList.size()>1 ? stockDayInfoList.get(stockDayInfoList.size() - 2) : null;
         StockDayInfo stockDayInfo = stockDayInfoList.get(stockDayInfoList.size() - 1);
         StockBean stockBean = new StockBean();
         stockBean.setStockNum(stockNum);
@@ -67,10 +68,10 @@ public class EchnicalaspectService implements IEchnicalaspectService {
         boolean isKdjdeathcross = kdj.isKdjdeathcross(stockDayInfoList);
         boolean isShortUpwardTrend = kdj.isShortUpwardTrend(stockDayInfoList);
         boolean isShortDownwardTrend = kdj.isShortDownwardTrend(stockDayInfoList);
-        boolean isBullMarket = macd.isBullMarket(preStockDayInfo, stockDayInfo);
-        boolean isBearMarket = macd.isBearMarket(preStockDayInfo, stockDayInfo);
-        boolean isUpTrend = macd.isUpTrend(preStockDayInfo, stockDayInfo);
-        boolean isDownTrend = macd.isDownTrend(preStockDayInfo, stockDayInfo);
+        boolean isBullMarket = preStockDayInfo != null && macd.isBullMarket(preStockDayInfo, stockDayInfo);
+        boolean isBearMarket = preStockDayInfo != null &&  macd.isBearMarket(preStockDayInfo, stockDayInfo);
+        boolean isUpTrend = preStockDayInfo != null &&  macd.isUpTrend(preStockDayInfo, stockDayInfo);
+        boolean isDownTrend = preStockDayInfo != null &&  macd.isDownTrend(preStockDayInfo, stockDayInfo);
         int prosperityLevel = rsi.prosperityLevel(stockDayInfoList);
 
         String currentTime = DateUtil.getCurrentTime();
